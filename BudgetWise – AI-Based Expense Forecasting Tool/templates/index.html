@@ -1,0 +1,154 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>BudgetWise | Authentication</title>
+
+    <!-- Google Font -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link href="https://fonts.googleapis.com/css2?family=Roboto:wght@400;500;700;900&display=swap" rel="stylesheet">
+
+    <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+</head>
+
+<body>
+
+<div class="login-bg">
+
+    <div class="brand-header">
+        <img src="{{ url_for('static', filename='icon.png') }}" class="app-icon">
+
+        <div class="brand-text">
+            <span class="app-title">BudgetWise</span>
+            <span class="app-subtitle">AI Expense Forecasting Tool</span>
+        </div>
+    </div>
+
+    <div class="form-container">
+
+        <!-- ================= LOGIN ================= -->
+        <div class="form-box" id="login-box">
+
+            <h2 class="form-title">Sign In</h2>
+
+            {% with messages = get_flashed_messages() %}
+                {% if messages %}
+                    <div class="flash-messages">
+                        {% for message in messages %}
+                            <p>{{ message }}</p>
+                        {% endfor %}
+                    </div>
+                {% endif %}
+            {% endwith %}
+
+            <form action="/login" method="POST">
+
+                <div class="input-group">
+                    <label>Email Address</label>
+                    <input type="email" name="email" required>
+                </div>
+
+                <div class="input-group">
+                    <label>Password</label>
+                    <input
+                        type="password"
+                        name="password"
+                        required
+                        minlength="8"
+                        pattern="^(?=.*[A-Z])(?=.*[0-9])(?=.*[!@#$%^&*]).{8,}$"
+                        title="Password must contain:
+- At least 8 characters
+- One uppercase letter
+- One number
+- One special character (!@#$%^&*)"
+                    >
+                </div>
+
+                <button type="submit" class="primary-btn">
+                    Login
+                </button>
+
+            </form>
+
+            <p class="switch-text">
+                Don’t have an account?
+                <span onclick="showRegister()">Create Account</span>
+            </p>
+
+        </div>
+
+
+        <!-- ================= REGISTER ================= -->
+        <div class="form-box hidden" id="register-box">
+
+            <h2 class="form-title">Create Account</h2>
+
+            {% with messages = get_flashed_messages() %}
+                {% if messages %}
+                    <div class="flash-messages">
+                        {% for message in messages %}
+                            <p>{{ message }}</p>
+                        {% endfor %}
+                    </div>
+                {% endif %}
+            {% endwith %}
+
+            <form action="/register" method="POST">
+
+                <div class="input-group">
+                    <label>Full Name</label>
+                    <input type="text" name="name" required>
+                </div>
+
+                <div class="input-group">
+                    <label>Email Address</label>
+                    <input type="email" name="email" required>
+                </div>
+
+                <div class="input-group">
+                    <label>Password</label>
+                    <input
+                        type="password"
+                        name="password"
+                        required
+                        minlength="8"
+                        pattern="^(?=.*[A-Z])(?=.*[0-9])(?=.*[!@#$%^&*]).{8,}$"
+                        title="Password must contain:
+- At least 8 characters
+- One uppercase letter
+- One number
+- One special character (!@#$%^&*)"
+                    >
+                </div>
+
+                <button type="submit" class="primary-btn">
+                    Register
+                </button>
+
+            </form>
+
+            <p class="switch-text">
+                Already have an account?
+                <span onclick="showLogin()">Login</span>
+            </p>
+
+        </div>
+
+    </div>
+<script>
+function showRegister(){
+    document.getElementById("login-box").style.display = "none";
+    document.getElementById("register-box").style.display = "block";
+}
+
+function showLogin(){
+    document.getElementById("register-box").style.display = "none";
+    document.getElementById("login-box").style.display = "block";
+}
+</script>
+</div>
+
+<script src="{{ url_for('static', filename='script.js') }}"></script>
+
+</body>
+</html>

@@ -1,0 +1,84 @@
+{% extends "dashboard.html" %}
+
+{% block content %}
+
+<div class="history-layout">
+
+    <!-- LEFT SIDE -->
+    <div class="history-left">
+
+        <!-- Summary Cards -->
+        <div class="history-cards">
+            <div class="history-card">
+                <h4>Budget</h4>
+                <p>₹{{ monthly_budget }}</p>
+            </div>
+
+            <div class="history-card">
+                <h4>Total Spent</h4>
+                <p>₹{{ total_spent }}</p>
+            </div>
+
+            <div class="history-card">
+                <h4>Remaining</h4>
+                <p class="{% if remaining < 0 %}negative{% endif %}">
+                    ₹{{ remaining }}
+                </p>
+            </div>
+        </div>
+
+        <!-- Month Filter -->
+        <form method="GET" class="month-filter">
+            <label>Select Month</label>
+
+            <input type="month" name="month"
+            value="{{ selected_month }}">
+
+            <button type="submit" class="btn-blue">Filter</button>
+        </form>
+
+        <!-- Expense Table -->
+        <div class="history-table-card">
+            <h3>Expense History</h3>
+
+            <div class="history-table">
+                <div class="table-header">
+                    <span>Amount</span>
+                    <span>Category</span>
+                    <span>Date</span>
+                    <span>Note</span>
+                </div>
+
+                {% for expense in expenses %}
+                <div class="table-row">
+                    <span>₹{{ expense.amount }}</span>
+                    <span>{{ expense.category }}</span>
+                    <span>{{ expense.date.strftime('%d %b %Y') }}</span>
+                    <span>{{ expense.note }}</span>
+                </div>
+                {% endfor %}
+            </div>
+        </div>
+
+    </div>
+
+    <!-- RIGHT SIDE -->
+    <div class="history-right">
+
+        <div class="history-chart-card">
+            <h3>Monthly Spending Overview</h3>
+
+            <div class="chart-box">
+                <canvas id="monthlyChart"></canvas>
+            </div>
+        </div>
+
+    </div>
+
+</div>
+
+<div id="dataHolder"
+data-category='{{ category_summary | tojson }}'>
+</div>
+
+{% endblock %}

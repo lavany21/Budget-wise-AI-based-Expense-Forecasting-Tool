@@ -1,0 +1,458 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>BudgetWise Dashboard</title>
+
+    <link rel="stylesheet" href="{{ url_for('static', filename='dashboard.css') }}">
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+</head>
+
+<body>
+
+<div class="app-layout">
+
+    <!-- SIDEBAR -->
+    <aside class="sidebar">
+        <div class="sidebar-header">
+            <img src="{{ url_for('static', filename='icon.png') }}" class="sidebar-icon">
+            <div class="brand-text">
+                <h1>Budget<span>Wise</span></h1>
+                <p>AI Expense Forecasting Tool</p>
+            </div>
+        </div>
+
+<ul class="menu">
+
+    <li class="{% if request.path == '/dashboard' %}active{% endif %}">
+        <a href="/dashboard">
+            <span class="icon">📊</span>
+            <span>Summary</span>
+        </a>
+    </li>
+
+    <li class="{% if request.path == '/history' %}active{% endif %}">
+    <a href="/history">
+        <span class="icon">📂</span>
+        <span>History</span>
+    </a>
+</li>
+
+    <li onclick="logout()">
+        <span class="icon">⏻</span>
+        <span>Logout</span>
+    </li>
+
+</ul>
+    </aside>
+
+    <!-- MAIN CONTENT -->
+    <div class="main-wrapper">
+
+        <!-- TOPBAR -->
+        <header class="topbar">
+           <h2>
+    {% if request.path == '/budget_history' %}
+        History
+    {% else %}
+        Dashboard
+    {% endif %}
+</h2>
+
+            <div class="topbar-right">
+
+                <!-- Calculator -->
+                <div class="calc-wrapper">
+                    <button class="icon-btn" onclick="toggleCalculator()">🧮</button>
+
+                    <div id="calculatorBox" class="calculator-box">
+                        <input type="text" id="calcInput" placeholder="0">
+                        <div class="calc-buttons">
+                            <button onclick="addValue('7')">7</button>
+                            <button onclick="addValue('8')">8</button>
+                            <button onclick="addValue('9')">9</button>
+                            <button onclick="addValue('+')">+</button>
+
+                            <button onclick="addValue('4')">4</button>
+                            <button onclick="addValue('5')">5</button>
+                            <button onclick="addValue('6')">6</button>
+                            <button onclick="addValue('-')">-</button>
+
+                            <button onclick="addValue('1')">1</button>
+                            <button onclick="addValue('2')">2</button>
+                            <button onclick="addValue('3')">3</button>
+                            <button onclick="addValue('*')">*</button>
+
+                            <button onclick="addValue('0')">0</button>
+                            <button onclick="calculate()">=</button>
+                            <button onclick="clearCalc()">C</button>
+                            <button onclick="addValue('/')">/</button>
+                        </div>
+                    </div>
+                </div>
+
+<!-- PROFILE SECTION -->
+<div class="profile-wrapper">
+    <div class="profile" id="profileBtn">
+        <img src="https://i.pravatar.cc/100?u={{ user.email }}" 
+             class="profile-img" 
+             alt="Profile">
+
+        <span>{{ user.name }}</span>
+    </div>
+
+    <div class="profile-dropdown" id="profileDropdown">
+        <div class="profile-header">
+            <img src="https://i.pravatar.cc/100?u={{ user.email }}">
+            <div>
+                <h4>{{ user.name }}</h4>
+                <p>{{ user.email }}</p>
+            </div>
+        </div>
+
+        <hr>
+<a href="#" onclick="openEditProfile(); return false;">✏️ Edit Profile</a>
+<a href="#" onclick="openResetPassword(); return false;">🔒 Reset Password</a>
+<a href="#" onclick="openSettings(); return false;">⚙️ Settings</a>
+<a href="#" onclick="openBudgetHistory(); return false;">📋 Budget History</a>
+
+        <hr>
+
+        <a href="/logout" class="logout">🚪 Logout</a>
+    </div>
+</div>
+
+
+
+<div id="profileMenu" class="profile-menu">
+    <div class="profile-header">
+        <img src="https://i.pravatar.cc/100">
+        <h4>{{ user.name }}</h4>
+<p>{{ user.email }}</p>
+    </div>
+
+    <hr>
+
+    <button onclick="editProfile()">✏ Edit Profile</button>
+    <button onclick="resetPassword()">🔒 Reset Password</button>
+    <button onclick="viewSettings()">⚙ Settings</button>
+
+    <hr>
+
+    <button class="logout-btn" onclick="logout()">🚪 Logout</button>
+</div>
+
+
+
+                </div>
+
+            </div>
+        </header>
+
+        <!-- MAIN AREA -->
+        <main class="main-area">
+    {% block content %}
+ 
+
+            <div class="dashboard {% if setup_mode %}setup-center{% endif %}">
+
+                <!-- Card 1 -->
+<div class="card">
+    <h3>Set Monthly Budget</h3>
+
+    <form action="/save_budget" method="POST">
+
+        <label>Monthly Budget</label>
+        <input type="number" name="monthly_budget" placeholder="Enter budget" required>
+
+        <label>Select Month</label>
+        <input type="month" name="selected_month">
+
+        <label>Savings Goal</label>
+        <input type="number" name="savings_goal" placeholder="Enter savings goal">
+
+        <button type="submit" class="btn-green">Save Budget</button>
+
+    </form>
+
+    <div class="budget-info">
+        <div class="budget-row">
+            <span>Current Budget</span>
+            <span class="amount">₹{{ monthly_budget }}</span>
+        </div>
+
+        <div class="budget-row">
+            <span>Remaining</span>
+            <span class="amount {{ 'negative' if remaining < 0 else 'remaining' }}">
+                ₹{{ remaining }}
+            </span>
+        </div>
+    </div>
+</div>
+  <!-- Card 2 -->
+<div class="card">
+    <h3>Add Daily Expense</h3>
+
+    <form action="/add_expense" method="POST">
+        <label>Type</label>
+<select name="type" required>
+    <option value="expense">Expense</option>
+    <option value="income">Income</option>
+</select>
+
+        <label>Date</label>
+        <input type="date" name="date" required>
+
+        <label>Amount</label>
+        <input type="number" name="amount" required>
+
+        <label>Category</label>
+        <select name="category">
+<option value="">Auto Detect</option>
+<option>Groceries</option>
+<option>Food & Dining</option>
+<option>Transport</option>
+<option>Fuel</option>
+<option>Shopping</option>
+<option>Entertainment</option>
+<option>Health & Medical</option>
+<option>Education</option>
+<option>Rent</option>
+<option>Subscriptions</option>
+<option>Other</option>
+</select>
+
+        <label>Note</label>
+        <input type="text" name="note">
+
+        <button class="btn-blue" type="submit">Add Expense</button>
+    </form>
+</div>
+  <!-- Card 3 -->
+ 
+<!-- Card 4 -->
+<div class="card">
+
+<h3>Spending by Category</h3>
+
+<div class="chart-wrapper">
+    <canvas id="categoryChart"></canvas>
+</div>
+
+<hr style="margin:20px 0;">
+
+<div class="budget-details">
+
+<p>
+<span>Monthly Budget</span>
+<strong>₹{{ monthly_budget }}</strong>
+</p>
+
+<p>
+<span>Spent So Far</span>
+<strong style="color:#f59e0b;">₹{{ total_spent }}</strong>
+</p>
+
+<p>
+<span>Remaining</span>
+<strong style="color:#22c55e;">₹{{ remaining }}</strong>
+</p>
+
+<p>
+<span>Savings Goal</span>
+<strong>₹{{ user.savings_goal or 0 }}</strong>
+</p>
+
+</div>
+
+</div>
+            <!-- Expense List -->
+<div class="expenses">
+    <h3>Today's Expenses</h3>
+
+    {% if expenses %}
+        {% for expense in expenses %}
+        <div class="expense-item">
+
+            <!-- VIEW MODE -->
+<div id="view-{{ expense.id }}" class="expense-row">
+
+    <div class="expense-col amount">
+        ₹{{ expense.amount }}
+    </div>
+
+<div>
+<span class="category-badge badge-{{ expense.category|lower|replace(' ','-')|replace('&','') }}">
+{{ expense.category }}
+</span>
+</div>
+
+    <div class="expense-col date">
+        {{ expense.date.strftime('%d %b %Y') }}
+    </div>
+
+    <div class="expense-col note">
+        {{ expense.note }}
+    </div>
+
+    <div class="expense-col actions">
+
+        <button class="btn-edit"
+                data-id="{{ expense.id }}">
+            Edit
+        </button>
+
+        <form action="/delete_expense/{{ expense.id }}"
+              method="POST"
+              style="display:inline;">
+            <button type="submit"
+                    class="btn-delete"
+                    onclick="return confirm('Delete this expense?')">
+                Delete
+            </button>
+        </form>
+
+    </div>
+
+</div>
+
+            <!-- EDIT MODE -->
+            <div id="edit-{{ expense.id }}" style="display:none;">
+                <form action="/update_expense/{{ expense.id }}" method="POST">
+
+                    <input type="number" name="amount"
+                        value="{{ expense.amount }}" required>
+
+                    <input type="date" name="date"
+                        value="{{ expense.date.strftime('%Y-%m-%d') }}" required>
+
+                    <select name="category">
+                        <option {% if expense.category == 'Groceries' %}selected{% endif %}>Groceries</option>
+                        <option {% if expense.category == 'Food & Dining' %}selected{% endif %}>Food & Dining</option>
+                        <option {% if expense.category == 'Transport' %}selected{% endif %}>Transport</option>
+                        <option {% if expense.category == 'Fuel' %}selected{% endif %}>Fuel</option>
+                        <option {% if expense.category == 'Shopping' %}selected{% endif %}>Shopping</option>
+                        <option {% if expense.category == 'Entertainment' %}selected{% endif %}>Entertainment</option>
+                        <option {% if expense.category == 'Health & Medical' %}selected{% endif %}>Health & Medical</option>
+                        <option {% if expense.category == 'Education' %}selected{% endif %}>Education</option>
+                        <option {% if expense.category == 'Rent' %}selected{% endif %}>Rent</option>
+                        <option {% if expense.category == 'Subscriptions' %}selected{% endif %}>Subscriptions</option>
+                        <option {% if expense.category == 'Other' %}selected{% endif %}>Other</option>
+                    </select>
+
+                    <input type="text" name="note"
+                        value="{{ expense.note }}">
+
+                    <button type="submit" class="btn-blue">Save</button>
+                    <button type="button"
+        data-id="{{ expense.id }}"
+        onclick="cancelEdit(this)">
+    Cancel
+</button>
+                </form>
+            </div>
+
+        </div>
+        {% endfor %}
+    {% else %}
+        <p style="text-align:center;color:#6b7280;">
+            No expenses added yet
+        </p>
+    {% endif %}
+</div>
+<!-- Modal -->
+<div id="globalModal" class="modal-overlay">
+  <div class="modal-box">
+    <span class="modal-close" onclick="closeModal()">&times;</span>
+    <div id="modalContent"></div>
+  </div>
+</div>
+
+<!-- User Data for JS -->
+
+<!-- Profile Setup Modal -->
+<div id="profileSetupModal" class="modal-overlay"
+     {% if setup_mode %} style="display:flex;" {% else %} style="display:none;" {% endif %}>
+  <div class="modal-box">
+
+    <span class="modal-close" onclick="closeProfileSetup()">&times;</span>
+
+    <h2 style="margin-bottom:20px;">Complete Your Profile</h2>
+
+    <form action="/save_profile" method="POST" class="profile-grid-form">
+
+        <div>
+            <label>Age</label>
+            <input type="number" name="age" required>
+        </div>
+
+        <div>
+            <label>Gender</label>
+            <select name="gender">
+                <option>Male</option>
+                <option>Female</option>
+                <option>Other</option>
+            </select>
+        </div>
+
+        <div>
+            <label>Profession</label>
+            <select name="profession">
+                <option>Employee</option>
+                <option>Business</option>
+                <option>Student</option>
+                <option>Unemployed</option>
+                <option>Freelancer</option>
+            </select>
+        </div>
+
+        <div>
+            <label>Monthly Income</label>
+            <input type="number" name="monthly_income" required>
+        </div>
+
+        <div>
+            <label>Budget Cycle Start Day</label>
+            <input type="number" name="budget_cycle_start" min="1" max="28" required>
+        </div>
+
+        <div>
+            <label>Budget Start Date</label>
+            <input type="date" name="budget_start" required>
+        </div>
+
+        <div>
+            <label>Fix Budget?</label>
+            <select name="budget_fixed" id="budgetFixedSetup" onchange="toggleSetupEditLimit()">
+                <option value="yes">Yes</option>
+                <option value="no">No</option>
+            </select>
+        </div>
+
+        <div id="setupEditLimitField">
+    <label>How many times can edit monthly budget?</label>
+    <input type="number" name="edit_limit">
+</div>
+
+        <div class="full-width">
+            <button type="submit" class="btn-blue">Save Profile</button>
+        </div>
+
+    </form>
+
+  </div>
+</div>
+</div>   <!-- profileSetupModal -->
+
+</script>
+<div id="dataHolder"
+     data-category='{{ category_summary | tojson }}'
+     data-income='{{ income_vs_expense | tojson }}'
+     data-monthly='{{ monthly_summary | tojson }}'>
+</div>
+ {% endblock %}
+</main>
+
+<script src="{{ url_for('static', filename='dashboard.js') }}"></script>
+</body>
+</html>
